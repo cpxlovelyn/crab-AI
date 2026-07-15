@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>crabAI</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#0d1117;color:#c9d1d9;height:100vh;display:flex;flex-direction:column}
+#header{padding:12px 16px;background:#161b22;border-bottom:1px solid #30363d;display:flex;justify-content:space-between;align-items:center}
+#header h1{font-size:18px;color:#58a6ff}
+#header button{background:#238636;color:white;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px}
+#chat-container{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+.msg{max-width:85%;padding:10px 14px;border-radius:12px;line-height:1.6;font-size:14px}
+.msg.user{align-self:flex-end;background:#1f6feb;color:white}
+.msg.ai{align-self:flex-start;background:#21262d;border:1px solid #30363d}
+.msg.ai .block-title{color:#58a6ff;font-weight:bold;margin:8px 0 4px}
+.msg.ai .block-title:first-child{margin-top:0}
+#progress-bar{display:none;height:3px;background:#1f6feb;border-radius:2px;margin-bottom:8px;transition:width 0.3s}
+#input-area{padding:12px 16px;background:#161b22;border-top:1px solid #30363d;display:flex;gap:8px;align-items:center}
+#chat-input{flex:1;background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:10px 14px;color:#c9d1d9;font-size:14px;outline:none}
+#chat-input::placeholder{color:#484f58}
+#send-btn{background:#1f6feb;color:white;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-size:14px}
+#send-btn:disabled{background:#484f58;cursor:not-allowed}
+#voice-btn{background:#21262d;color:#c9d1d9;border:1px solid #30363d;padding:10px 14px;border-radius:8px;cursor:pointer;font-size:14px}
+#voice-btn.recording{background:#da3633;color:white}
+#facts-panel{display:none;position:fixed;top:0;right:0;width:320px;height:100vh;background:#161b22;border-left:1px solid #30363d;padding:16px;overflow-y:auto;z-index:100}
+#facts-panel h2{font-size:16px;margin-bottom:12px;color:#58a6ff}
+.dim-card{background:#21262d;border:1px solid #30363d;border-radius:8px;padding:12px;margin-bottom:12px}
+.dim-card h3{color:#58a6ff;font-size:14px;margin-bottom:8px}
+.dim-card .tags{display:flex;flex-wrap:wrap;gap:6px}
+.dim-card .tag{background:#0d1117;border:1px solid #30363d;border-radius:4px;padding:4px 8px;font-size:12px;color:#c9d1d9}
+.close-btn{background:#da3633;color:white;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px;margin-bottom:12px}
+#export-btn,#import-btn,#change-key-btn{background:#238636;color:white;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px;margin-right:8px;margin-bottom:8px}
+#overlay{display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.5);z-index:99}
+#key-overlay{position:fixed;top:0;left:0;width:100vw;height:100vh;background:#0d1117;z-index:1000;display:flex;flex-direction:column;justify-content:center;align-items:center}
+#key-overlay h2{color:#58a6ff;margin-bottom:16px}
+#key-overlay p{color:#8b949e;margin-bottom:24px;font-size:14px;max-width:400px;text-align:center}
+#api-key-input{width:400px;padding:12px;background:#21262d;border:1px solid #30363d;border-radius:8px;color:#c9d1d9;margin-bottom:16px;font-size:14px}
+#save-key-btn{background:#238636;color:white;border:none;padding:10px 24px;border-radius:8px;cursor:pointer;font-size:14px}
+#key-error{color:#da3633;margin-top:8px;font-size:12px;display:none}
+</style>
+</head>
+<body>
+<div id="key-overlay">
+<h2>欢迎使用 crabAI</h2>
+<p>请输入你的 DeepSeek API Key<br>在 platform.deepseek.com 免费注册获取</p>
+<input type="password" id="api-key-input" placeholder="sk-...">
+<button id="save-key-btn">保存并开始</button>
+<div id="key-error">Key格式错误，请以 sk- 开头</div>
+</div>
+<div id="header">
+<h1>crabAI</h1>
+<button id="facts-btn">事实档案</button>
+</div>
+<div id="chat-container"></div>
+<div id="input-area">
+<button id="voice-btn">语音</button>
+<input type="text" id="chat-input" placeholder="输入消息或点击语音...">
+<button id="send-btn">发送</button>
+</div>
+<div id="overlay"></div>
+<div id="facts-panel">
+<button class="close-btn" id="close-facts">关闭</button>
+<h2>个人档案</h2>
+<button id="export-btn">导出档案</button>
+<button id="import-btn">导入档案</button>
+<input type="file" id="import-file" accept=".json" style="display:none">
+<div id="facts-content"></div>
+<button id="change-key-btn">更换 API Key</button>
+</div>
+
+<script>
+// ========== 配置 ==========
+const API_URL = 'https://api.deepseek.com/v1/chat/completions';
+const CHAT_MODEL = 'deepseek-reasoner';
+const EXTRACT_MODEL = 'deepseek-chat';
+
+// ========== 四大维度 ==========
+const DIMENSIONS = {
+  emotion: '情感关系',
+  study: '学业知识',
+  career: '事业规划',
+  life: '生活日常'
+};
+
+// ========== DOM 元素 ==========
+const keyOverlay = document.getElementById('key-overlay');
+const apiKeyInput = document.getElementById('api-key-input');
+const saveKeyBtn = document.getElementById('save-key-btn');
+const keyError = document.getElementById('key-error');
+const chatContainer = document.getElementById('chat-container');
+const chatInput = document.getElementById('chat-input');
+const sendBtn = document.getElementById('send-btn');
+const voiceBtn = document.getElementById('voice-btn');
+const factsBtn = document.getElementById('facts-btn');
+const factsPanel = document.getElementById('facts-panel');
+const factsContent = document.getElementById('facts-content');
+const closeFacts = document.getElementById('close-facts');
+const overlay = document.getElementById('overlay');
+const exportBtn = document.getElementById('export-btn');
+const importBtn = document.getElementById('import-btn');
+const importFile = document.getElementById('import-file');
+const changeKeyBtn = document.getElementById('change-key-btn');
+
+// ========== 获取 API Key ==========
+function getApiKey() {
+  return localStorage.getItem('crabAI_api_key') || '';
+}
+
+// ========== 检查 API Key ==========
+function checkApiKey() {
+  const key = getApiKey();
+  if (!key || key.length < 20) {
+    keyOverlay.style.display = 'flex';
+    return false;
+  }
+  keyOverlay.style.display = 'none';
+  return true;
+}
+
+// ========== 保存 API Key ==========
+function saveApiKey() {
+  const key = apiKeyInput.value.trim();
+  if (!key || !key.startsWith('sk-') || key.length < 20) {
+    keyError.style.display = 'block';
+    return;
+  }
+  localStorage.setItem('crabAI_api_key', key);
+  keyError.style.display = 'none';
+  keyOverlay.style.display = 'none';
+}
+
+// ========== 数据存储 ==========
+let messages = [];
+let facts = {emotion:[], study:[], career:[], life:[]};
+
+// ========== 旧数据迁移 ==========
+function migrateOldData() {
+  const oldFacts = localStorage.getItem('crabAI_facts');
+  if (oldFacts) {
+    try {
+      const old = JSON.parse(oldFacts);
+      for (let key in old) {
+        facts.life.push(key + ': ' + old[key]);
+      }
+      saveFacts();
+      localStorage.removeItem('crabAI_facts');
+      alert('旧数据已迁移，建议立即导出备份');
+    } catch(e) {
+      console.log('迁移失败', e);
+    }
+  }
+  const oldMessages = localStorage.getItem('crabAI_messages');
+  if (oldMessages) {
+    try {
+      messages = JSON.parse(oldMessages);
+    } catch(e) {
+      messages = [];
+    }
+  }
+}
+
+// ========== 保存 ==========
+function saveMessages() {
+  localStorage.setItem('crabAI_messages', JSON.stringify(messages));
+}
+
+function saveFacts() {
+  localStorage.setItem('crabAI_dims', JSON.stringify(facts));
+}
+
+// ========== 初始化 ==========
+function init() {
+  checkApiKey();
+  migrateOldData();
+  const savedFacts = localStorage.getItem('crabAI_dims');
+  if (savedFacts) {
+    try {
+      facts = JSON.parse(savedFacts);
+    } catch(e) {
+      facts = {emotion:[], study:[], career:[], life:[]};
+    }
+  }
+  renderMessages();
+  renderFacts();
+}
+
+// ========== 渲染消息 ==========
+function renderMessages() {
+  chatContainer.innerHTML = '';
+  messages.forEach(function(msg) {
+    addMessageToDOM(msg.role, msg.content);
+  });
+  scrollToBottom();
+}
+
+function addMessageToDOM(role, content) {
+  const div = document.createElement('div');
+  div.className = 'msg ' + role;
+  if (role === 'ai') {
+    let html = content
+      .replace(/=== 区块一：深度叙事与分析 ===/g, '<div class="block-title">深度叙事与分析</div>')
+      .replace(/=== 区块二：核心逻辑推演 ===/g, '<div class="block-title">核心逻辑推演</div>')
+      .replace(/\n/g, '<br>');
+    div.innerHTML = html;
+  } else {
+    div.textContent = content;
+  }
+  chatContainer.appendChild(div);
+  scrollToBottom();
+}
+
+function scrollToBottom() {
+  chatContainer.scrollTop = chatContainer.scrollHeight;
+}
+
+// ========== 流式输出 ==========
+async function sendMessage() {
+  const text = chatInput.value.trim();
+  if (!text) return;
+  const API_KEY = getApiKey();
+  if (!API_KEY) {
+    alert('请先输入 API Key');
+    keyOverlay.style.display = 'flex';
+    return;
+  }
+
+  messages.push({role:'user', content:text});
+  addMessageToDOM('user', text);
+  chatInput.value = '';
+  sendBtn.disabled = true;
+  voiceBtn.disabled = true;
+
+  const aiDiv = document.createElement('div');
+  aiDiv.className = 'msg ai';
+  const progressBar = document.createElement('div');
+  progressBar.id = 'progress-bar';
+  progressBar.style.display = 'block';
+  progressBar.style.width = '0%';
+  aiDiv.appendChild(progressBar);
+  const contentDiv = document.createElement('div');
+  contentDiv.className = 'ai-content';
+  aiDiv.appendChild(contentDiv);
+  chatContainer.appendChild(aiDiv);
+  scrollToBottom();
+
+  const factsText = JSON.stringify(facts);
+  let sysPrompt = '你是一位极度深度的多学科心理与逻辑分析师。' +
+    '【底层思维操作系统 - 每次回复必须调用】' +
+    '1. 真实错误模拟器：直接进实战场景，出错后通过提问让自己发现错误，试错至少2次再揭露答案，重复到自信作答。' +
+    '2. 困惑破解者：先给钥匙句用日常类比讲，别用术语，再问3个理解才能答对的问题，全对才继续。' +
+    '3. 定制学习路径：明确目标、技能、期限、成果和已有基础，要7天计划，每天45分钟任务、完成标准和避坑点，达不成目标就改。' +
+    '4. 隐藏漏洞检测器：觉得掌握技能后，被问5个戳穿浅尝辄止的问题，每个答案指出知识盲点，只懂皮毛就直说。' +
+    '5. 严苛进度镜像：监督长期进步，对比每次回复，说明是真进步还是重复错误，停滞就直言，只表扬真实可测进步。' +
+    '6. 最坏情景教练：学技能时模拟高压无教材场景，直接进入后指出失败点和需训练的地方。' +
+    '7. 思维捷径检查员：解决问题后审查思考过程，用捷径、死记硬背或碰运气就重来，要能说出每步为什么才算掌握。' +
+    '8. 反向教学模拟器：假装学生被教技能，问简单问题，每用术语就要例子，讲错时顺着错逻辑推导到荒谬结论，直到解释自洽。' +
+    '【领域专家模式】' +
+    '输出领域专家认同的5个核心思维模式、专家争论最凶的3个方面及论据、出10道能区分理解与死记硬背的题，死磕题目改进。' +
+    '【顶级专家指令】' +
+    '准确胜过讨好，直接敢于争辩，先讲反方观点，没有新证据不轻易让步。' +
+    '给每个判断打标签：KNOWN训练事实、COMPUTED计算得出、INFERRED推论、COMMON通用知识、FRAME符号体系、GUESS没有根据。' +
+    '置信度：HIGH80%以上、MED50-80%、LOW20-50%、VERY LOW20%以下、UNKNOWN无法判断。' +
+    '不知道就写我不知道。反谄媚：不漂亮、不解释一切、不立刻同意、不制造权威感。事后解释标记为INFERRED,post-hoc。' +
+    '已知用户档案：' + factsText + '。' +
+    '请严格按以下格式输出（绝对禁止用Markdown符号如#*_`）：' +
+    '=== 区块一：深度叙事与分析 ===（共情、细腻、层层递进的深层心理剖析）' +
+    '=== 区块二：核心逻辑推演 ===（极度理性的因果推导、行为预测、理论验证）';
+
+  const requestMsgs = [{role:'system', content:sysPrompt}];
+  messages.forEach(function(m) { requestMsgs.push(m); });
+
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + API_KEY
+      },
+      body: JSON.stringify({
+        model: CHAT_MODEL,
+        messages: requestMsgs,
+        stream: true
+      })
+    });
+
+    if (!res.ok) {
+      throw new Error('API错误: ' + res.status);
+    }
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let fullText = '';
+    let progress = 0;
+
+    while (true) {
+      const {done, value} = await reader.read();
+      if (done) break;
+
+      const chunk = decoder.decode(value, {stream:true});
+      const lines = chunk.split('\n');
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line || !line.startsWith('data:')) continue;
+        const data = line.slice(5).trim();
+        if (data === '[DONE]') continue;
+
+        try {
+          const json = JSON.parse(data);
+          const delta = json.choices[0].delta.content;
+          if (delta) {
+            fullText += delta;
+            progress = Math.min(progress + 2, 95);
+            progressBar.style.width = progress + '%';
+
+            let html = fullText
+              .replace(/=== 区块一：深度叙事与分析 ===/g, '<div class="block-title">深度叙事与分析</div>')
+              .replace(/=== 区块二：核心逻辑推演 ===/g, '<div class="block-title">核心逻辑推演</div>')
+              .replace(/\n/g, '<br>');
+            contentDiv.innerHTML = html;
+            scrollToBottom();
+          }
+        } catch(e) {
+          // 忽略解析错误
+        }
+      }
+    }
+
+    progressBar.style.width = '100%';
+    setTimeout(function() {
+      progressBar.style.display = 'none';
+    }, 500);
+
+    messages.push({role:'assistant', content:fullText});
+    saveMessages();
+    extractFacts(text, fullText);
+
+  } catch(err) {
+    contentDiv.textContent = '出错了: ' + err.message;
+    progressBar.style.display = 'none';
+  } finally {
+    sendBtn.disabled = false;
+    voiceBtn.disabled = false;
+  }
+}
+
+// ========== 提取事实到四大维度 ==========
+async function extractFacts(userText, aiReply) {
+  const API_KEY = getApiKey();
+  if (!API_KEY) return;
+
+  const extractPrompt = '从以下对话中提取关键事实，分类到四个维度，返回纯JSON格式（不要任何其他文字）：' +
+    '{"情感关系":["事实1","事实2"], "学业知识":[], "事业规划":[], "生活日常":[]}。' +
+    '用户说：' + userText + '。AI回复：' + aiReply;
+
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + API_KEY
+      },
+      body: JSON.stringify({
+        model: EXTRACT_MODEL,
+        messages: [{role:'user', content:extractPrompt}],
+        stream: false
+      })
+    });
+
+    if (!res.ok) return;
+
+    const data = await res.json();
+    const text = data.choices[0].message.content;
+
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      const newFacts = JSON.parse(jsonMatch[0]);
+      for (let dim in newFacts) {
+        const key = Object.keys(DIMENSIONS).find(function(k) {
+          return DIMENSIONS[k] === dim;
+        });
+        if (key && Array.isArray(newFacts[dim])) {
+          newFacts[dim].forEach(function(fact) {
+            if (fact && facts[key].indexOf(fact) === -1) {
+              facts[key].push(fact);
+            }
+          });
+        }
+      }
+      saveFacts();
+      renderFacts();
+    }
+  } catch(e) {
+    console.log('提取事实失败', e);
+  }
+}
+
+// ========== 渲染事实档案 ==========
+function renderFacts() {
+  factsContent.innerHTML = '';
+  for (let key in DIMENSIONS) {
+    const card = document.createElement('div');
+    card.className = 'dim-card';
+    const title = document.createElement('h3');
+    title.textContent = DIMENSIONS[key];
+    card.appendChild(title);
+    const tagsDiv = document.createElement('div');
+    tagsDiv.className = 'tags';
+    facts[key].forEach(function(fact) {
+      const tag = document.createElement('span');
+      tag.className = 'tag';
+      tag.textContent = fact;
+      tagsDiv.appendChild(tag);
+    });
+    card.appendChild(tagsDiv);
+    factsContent.appendChild(card);
+  }
+}
+
+// ========== 导出档案 ==========
+function exportFacts() {
+  const data = localStorage.getItem('crabAI_dims');
+  if (!data) {
+    alert('暂无档案可导出');
+    return;
+  }
+  const blob = new Blob([data], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const timestamp = new Date().toISOString().slice(0,19).replace(/:/g,'-');
+  a.download = 'crabAI_backup_' + timestamp + '.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ========== 导入档案 ==========
+function importFacts() {
+  importFile.click();
+}
+
+importFile.addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(event) {
+    try {
+      const json = JSON.parse(event.target.result);
+      if (Array.isArray(json.emotion) && Array.isArray(json.study) && 
+          Array.isArray(json.career) && Array.isArray(json.life)) {
+        localStorage.setItem('crabAI_dims', JSON.stringify(json));
+        facts = json;
+        renderFacts();
+        alert('档案导入成功');
+      } else {
+        alert('档案格式错误');
+      }
+    } catch(err) {
+      alert('档案格式错误');
+    }
+  };
+  reader.onerror = function() {
+    alert('读取文件失败');
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
+// ========== 语音输入 ==========
+function setupVoice() {
+  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+    voiceBtn.style.display = 'none';
+    return;
+  }
+
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const recognition = new SpeechRecognition();
+  recognition.lang = 'zh-CN';
+  recognition.continuous = false;
+  recognition.interimResults = false;
+
+  voiceBtn.addEventListener('click', function() {
+    if (voiceBtn.classList.contains('recording')) {
+      recognition.stop();
+      voiceBtn.classList.remove('recording');
+      voiceBtn.textContent = '语音';
+    } else {
+      recognition.start();
+      voiceBtn.classList.add('recording');
+      voiceBtn.textContent = '停止';
+    }
+  });
+
+  recognition.onresult = function(event) {
+    const transcript = event.results[0][0].transcript;
+    chatInput.value = transcript;
+    voiceBtn.classList.remove('recording');
+    voiceBtn.textContent = '语音';
+  };
+
+  recognition.onerror = function() {
+    voiceBtn.classList.remove('recording');
+    voiceBtn.textContent = '语音';
+  };
+
+  recognition.onend = function() {
+    voiceBtn.classList.remove('recording');
+    voiceBtn.textContent = '语音';
+  };
+}
+
+// ========== 事件绑定 ==========
+saveKeyBtn.addEventListener('click', saveApiKey);
+apiKeyInput.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') saveApiKey();
+});
+
+sendBtn.addEventListener('click', sendMessage);
+chatInput.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') sendMessage();
+});
+
+factsBtn.addEventListener('click', function() {
+  factsPanel.style.display = 'block';
+  overlay.style.display = 'block';
+});
+
+closeFacts.addEventListener('click', function() {
+  factsPanel.style.display = 'none';
+  overlay.style.display = 'none';
+});
+
+overlay.addEventListener('click', function() {
+  factsPanel.style.display = 'none';
+  overlay.style.display = 'none';
+});
+
+exportBtn.addEventListener('click', exportFacts);
+importBtn.addEventListener('click', importFacts);
+
+changeKeyBtn.addEventListener('click', function() {
+  localStorage.removeItem('crabAI_api_key');
+  apiKeyInput.value = '';
+  keyOverlay.style.display = 'flex';
+});
+
+// ========== 启动 ==========
+init();
+setupVoice();
+</script>
+</body>
+</html>
