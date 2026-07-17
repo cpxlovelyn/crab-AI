@@ -3,42 +3,101 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>crabAI</title>
+<title>crabAI - 个人深度外脑</title>
+<link rel="manifest" href="manifest.json">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#0d1117;color:#c9d1d9;height:100vh;display:flex;flex-direction:column}
 #header{padding:12px 16px;background:#161b22;border-bottom:1px solid #30363d;display:flex;justify-content:space-between;align-items:center}
-#header h1{font-size:18px;color:#58a6ff}
-#header button{background:#238636;color:white;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px}
+#header h1{font-size:18px;color:#FF6B6B}
+#header button:not(#user-menu-btn){background:#FF6B6B;color:white;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px}
 #chat-container{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
 .msg{max-width:85%;padding:10px 14px;border-radius:12px;line-height:1.6;font-size:14px}
-.msg.user{align-self:flex-end;background:#1f6feb;color:white}
+.msg.user{align-self:flex-end;background:#FF6B6B;color:white}
 .msg.ai{align-self:flex-start;background:#21262d;border:1px solid #30363d}
-.msg.ai .block-title{color:#58a6ff;font-weight:bold;margin:8px 0 4px}
+.msg.ai .block-title{color:#FF6B6B;font-weight:bold;margin:8px 0 4px}
 .msg.ai .block-title:first-child{margin-top:0}
-#progress-bar{display:none;height:3px;background:#1f6feb;border-radius:2px;margin-bottom:8px;transition:width 0.3s}
+#progress-bar{display:none;height:3px;background:#FF6B6B;border-radius:2px;margin-bottom:8px;transition:width 0.3s}
 #input-area{padding:12px 16px;background:#161b22;border-top:1px solid #30363d;display:flex;gap:8px;align-items:center}
 #chat-input{flex:1;background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:10px 14px;color:#c9d1d9;font-size:14px;outline:none}
 #chat-input::placeholder{color:#484f58}
-#send-btn{background:#1f6feb;color:white;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-size:14px}
+#send-btn{background:#FF6B6B;color:white;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-size:14px}
 #send-btn:disabled{background:#484f58;cursor:not-allowed}
 #voice-btn{background:#21262d;color:#c9d1d9;border:1px solid #30363d;padding:10px 14px;border-radius:8px;cursor:pointer;font-size:14px}
 #voice-btn.recording{background:#da3633;color:white}
 #facts-panel{display:none;position:fixed;top:0;right:0;width:320px;height:100vh;background:#161b22;border-left:1px solid #30363d;padding:16px;overflow-y:auto;z-index:100}
-#facts-panel h2{font-size:16px;margin-bottom:12px;color:#58a6ff}
+#facts-panel h2{font-size:16px;margin-bottom:12px;color:#FF6B6B}
 .dim-card{background:#21262d;border:1px solid #30363d;border-radius:8px;padding:12px;margin-bottom:12px}
-.dim-card h3{color:#58a6ff;font-size:14px;margin-bottom:8px}
+.dim-card h3{color:#FF6B6B;font-size:14px;margin-bottom:8px}
 .dim-card .tags{display:flex;flex-wrap:wrap;gap:6px}
 .dim-card .tag{background:#0d1117;border:1px solid #30363d;border-radius:4px;padding:4px 8px;font-size:12px;color:#c9d1d9}
 .close-btn{background:#da3633;color:white;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px;margin-bottom:12px}
-#export-btn,#import-btn,#change-key-btn{background:#238636;color:white;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px;margin-right:8px;margin-bottom:8px}
+#export-btn,#import-btn,#change-key-btn,#import-profile-btn{background:#FF6B6B;color:white;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px;margin-right:8px;margin-bottom:8px}
 #overlay{display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.5);z-index:99}
 #key-overlay{position:fixed;top:0;left:0;width:100vw;height:100vh;background:#0d1117;z-index:1000;display:flex;flex-direction:column;justify-content:center;align-items:center}
-#key-overlay h2{color:#58a6ff;margin-bottom:16px}
+#key-overlay h2{color:#FF6B6B;margin-bottom:16px}
 #key-overlay p{color:#8b949e;margin-bottom:24px;font-size:14px;max-width:400px;text-align:center}
 #api-key-input{width:400px;padding:12px;background:#21262d;border:1px solid #30363d;border-radius:8px;color:#c9d1d9;margin-bottom:16px;font-size:14px}
-#save-key-btn{background:#238636;color:white;border:none;padding:10px 24px;border-radius:8px;cursor:pointer;font-size:14px}
+#save-key-btn{background:#FF6B6B;color:white;border:none;padding:10px 24px;border-radius:8px;cursor:pointer;font-size:14px}
 #key-error{color:#da3633;margin-top:8px;font-size:12px;display:none}
+
+#auth-modal{display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.8);z-index:2000;justify-content:center;align-items:center}
+#auth-modal.show{display:flex}
+#auth-modal .modal-box{background:#161b22;border:1px solid #30363d;border-radius:12px;padding:24px;width:90%;max-width:360px}
+#auth-modal h2{color:#FF6B6B;margin-bottom:20px;font-size:18px;text-align:center}
+#auth-modal input{width:100%;background:#21262d;border:1px solid #30363d;border-radius:8px;padding:12px;color:#c9d1d9;font-size:14px;margin-bottom:12px;outline:none}
+#auth-modal input:focus{border-color:#FF6B6B}
+#auth-modal input::placeholder{color:#484f58}
+#auth-modal button{width:100%;background:#FF6B6B;color:white;border:none;padding:12px;border-radius:8px;cursor:pointer;font-size:14px;margin-bottom:12px}
+#auth-modal .toggle-link{color:#FF6B6B;font-size:12px;text-align:center;cursor:pointer}
+#auth-modal .error-msg{color:#da3633;font-size:12px;margin-bottom:12px;text-align:center;display:none}
+
+#user-menu-btn{width:36px;height:36px;border-radius:50%;background:#FF6B6B;color:white;border:none;cursor:pointer;font-size:16px;padding:0;display:flex;align-items:center;justify-content:center;font-weight:bold;margin-left:8px}
+#user-menu{display:none;position:absolute;top:56px;right:16px;background:#161b22;border:1px solid #30363d;border-radius:8px;padding:8px;min-width:160px;z-index:500}
+#user-menu.show{display:block}
+#user-menu button{width:100%;background:none;color:#c9d1d9;border:none;padding:10px 12px;text-align:left;border-radius:6px;cursor:pointer;font-size:14px}
+#user-menu button:hover{background:#21262d}
+#user-menu .divider{height:1px;background:#30363d;margin:8px 0}
+
+#dashboard{display:none;flex:1;overflow-y:auto;padding:20px}
+#dashboard.show{display:block}
+.dashboard-greeting{text-align:center;margin-bottom:24px}
+.dashboard-greeting h2{font-size:24px;color:#FF6B6B;margin-bottom:8px}
+.dashboard-greeting p{font-size:14px;color:#8b949e}
+.dashboard-grid{display:grid;grid-template-columns:1fr;gap:16px;margin-bottom:24px}
+@media(min-width:768px){.dashboard-grid{grid-template-columns:repeat(3,1fr)}}
+.dashboard-card{background:#161b22;border:1px solid #30363d;border-radius:12px;padding:16px}
+.dashboard-card h3{font-size:14px;color:#FF6B6B;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.dashboard-card h3::before{content:'•';color:#FF6B6B}
+.mood-chart{height:120px;display:flex;align-items:flex-end;justify-content:space-between;padding:8px 0}
+.mood-bar{width:12%;background:#FF6B6B;border-radius:4px 4px 0 0;transition:height 0.3s}
+.mood-bar.low{background:#484f58}
+.mood-bar.medium{background:#F59E0B}
+.mood-bar.high{background:#FF6B6B}
+.todo-list{list-style:none;padding:0}
+.todo-item{padding:8px 0;border-bottom:1px solid #30363d;font-size:13px;color:#c9d1d9}
+.todo-item:last-child{border-bottom:none}
+.achievement-list{list-style:none;padding:0}
+.achievement-item{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #30363d;font-size:13px;color:#c9d1d9}
+.achievement-item:last-child{border-bottom:none}
+.achievement-item .badge{width:24px;height:24px;border-radius:50%;background:#F59E0B;color:#0d1117;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold}
+#start-chat-btn{width:100%;background:#FF6B6B;color:white;border:none;padding:16px;border-radius:12px;cursor:pointer;font-size:16px;font-weight:bold;margin-top:auto}
+
+#context-sidebar{display:none;position:fixed;top:50px;right:0;width:280px;height:calc(100vh - 120px);background:#161b22;border-left:1px solid #30363d;padding:12px;overflow-y:auto;z-index:50}
+#context-sidebar.show{display:block}
+.context-card{background:#21262d;border-radius:8px;padding:12px;margin-bottom:12px}
+.context-card h4{font-size:12px;color:#FF6B6B;margin-bottom:8px}
+.context-card p{font-size:12px;color:#c9d1d9;margin-bottom:4px}
+.context-tags{display:flex;flex-wrap:wrap;gap:4px}
+.context-tag{background:#0d1117;border:1px solid #30363d;border-radius:4px;padding:2px 6px;font-size:11px;color:#8b949e}
+
+#memory-popup{display:none;position:fixed;top:50%;right:20px;transform:translateY(-50%);background:#161b22;border:1px solid #FF6B6B;border-radius:8px;padding:12px;min-width:250px;max-width:300px;z-index:200}
+#memory-popup.show{display:block}
+#memory-popup h4{font-size:12px;color:#FF6B6B;margin-bottom:8px}
+#memory-popup ul{list-style:none;padding:0;margin:0}
+#memory-popup li{font-size:12px;color:#c9d1d9;padding:4px 0;border-bottom:1px solid #30363d}
+#memory-popup li:last-child{border-bottom:none}
+#memory-popup .close-memory{position:absolute;top:4px;right:8px;color:#8b949e;cursor:pointer;font-size:14px}
 </style>
 </head>
 <body>
@@ -49,11 +108,61 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 <button id="save-key-btn">保存并开始</button>
 <div id="key-error">Key格式错误，请以 sk- 开头</div>
 </div>
+
+<div id="auth-modal">
+  <div class="modal-box">
+    <h2 id="auth-title">登录</h2>
+    <div id="auth-error" class="error-msg"></div>
+    <input type="text" id="auth-username" placeholder="用户名">
+    <input type="password" id="auth-password" placeholder="密码">
+    <button id="auth-submit">登录</button>
+    <div id="auth-toggle" class="toggle-link">还没有账号？点击注册</div>
+  </div>
+</div>
+
 <div id="header">
 <h1>crabAI</h1>
-<button id="facts-btn">事实档案</button>
+<div style="position:relative">
+  <button id="facts-btn">事实档案</button>
+  <button id="user-menu-btn">?</button>
+  <div id="user-menu">
+    <button id="menu-profile">个人档案</button>
+    <button id="menu-settings">设置</button>
+    <div class="divider"></div>
+    <button id="menu-logout">退出登录</button>
+  </div>
 </div>
+</div>
+
+<div id="dashboard">
+  <div class="dashboard-greeting">
+    <h2 id="greeting-text">早安，朋友</h2>
+    <p id="date-text">今天是一个新的开始</p>
+  </div>
+  <div class="dashboard-grid">
+    <div class="dashboard-card">
+      <h3>心情曲线</h3>
+      <div class="mood-chart" id="mood-chart"></div>
+    </div>
+    <div class="dashboard-card">
+      <h3>待关注事项</h3>
+      <ul class="todo-list" id="todo-list"></ul>
+    </div>
+    <div class="dashboard-card">
+      <h3>最近成就</h3>
+      <ul class="achievement-list" id="achievement-list"></ul>
+    </div>
+  </div>
+  <button id="start-chat-btn">开始对话</button>
+</div>
+
 <div id="chat-container"></div>
+<div id="context-sidebar"></div>
+<div id="memory-popup">
+  <span class="close-memory" id="close-memory">×</span>
+  <h4>相关记忆</h4>
+  <ul id="memory-list"></ul>
+</div>
 <div id="input-area">
 <button id="voice-btn">语音</button>
 <input type="text" id="chat-input" placeholder="输入消息或点击语音...">
@@ -65,7 +174,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;b
 <h2>个人档案</h2>
 <button id="export-btn">导出档案</button>
 <button id="import-btn">导入档案</button>
+<button id="import-profile-btn">导入个人档案</button>
 <input type="file" id="import-file" accept=".json" style="display:none">
+<input type="file" id="import-profile-file" accept=".json" style="display:none">
 <div id="facts-content"></div>
 <button id="change-key-btn">更换 API Key</button>
 </div>
@@ -93,6 +204,7 @@ const chatContainer = document.getElementById('chat-container');
 const chatInput = document.getElementById('chat-input');
 const sendBtn = document.getElementById('send-btn');
 const voiceBtn = document.getElementById('voice-btn');
+const inputArea = document.getElementById('input-area');
 const factsBtn = document.getElementById('facts-btn');
 const factsPanel = document.getElementById('facts-panel');
 const factsContent = document.getElementById('facts-content');
@@ -103,9 +215,391 @@ const importBtn = document.getElementById('import-btn');
 const importFile = document.getElementById('import-file');
 const changeKeyBtn = document.getElementById('change-key-btn');
 
+const authModal = document.getElementById('auth-modal');
+const authTitle = document.getElementById('auth-title');
+const authError = document.getElementById('auth-error');
+const authUsername = document.getElementById('auth-username');
+const authPassword = document.getElementById('auth-password');
+const authSubmit = document.getElementById('auth-submit');
+const authToggle = document.getElementById('auth-toggle');
+const userMenuBtn = document.getElementById('user-menu-btn');
+const userMenu = document.getElementById('user-menu');
+const importProfileBtn = document.getElementById('import-profile-btn');
+const importProfileFile = document.getElementById('import-profile-file');
+
+const dashboard = document.getElementById('dashboard');
+const greetingText = document.getElementById('greeting-text');
+const dateText = document.getElementById('date-text');
+const moodChart = document.getElementById('mood-chart');
+const todoList = document.getElementById('todo-list');
+const achievementList = document.getElementById('achievement-list');
+const startChatBtn = document.getElementById('start-chat-btn');
+const contextSidebar = document.getElementById('context-sidebar');
+const memoryPopup = document.getElementById('memory-popup');
+const memoryList = document.getElementById('memory-list');
+const closeMemory = document.getElementById('close-memory');
+
+let isLoginMode = true;
+let currentUser = null;
+let isChatMode = false;
+
 // ========== 获取 API Key ==========
 function getApiKey() {
   return localStorage.getItem('crabAI_api_key') || '';
+}
+
+// ========== 账号体系 ==========
+function generateUserId() {
+  return 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+}
+
+function getUsers() {
+  const users = localStorage.getItem('crabAI_users');
+  return users ? JSON.parse(users) : {};
+}
+
+function saveUsers(users) {
+  localStorage.setItem('crabAI_users', JSON.stringify(users));
+}
+
+function getCurrentUser() {
+  const token = localStorage.getItem('crabAI_token');
+  const isLoggedIn = localStorage.getItem('crabAI_isLoggedIn');
+  if (token && isLoggedIn === 'true') {
+    const users = getUsers();
+    return users[token] || null;
+  }
+  return null;
+}
+
+function login(username, password) {
+  try {
+    const users = getUsers();
+    for (const token in users) {
+      if (users[token].username === username && users[token].password === btoa(password)) {
+        localStorage.setItem('crabAI_token', token);
+        localStorage.setItem('crabAI_isLoggedIn', 'true');
+        currentUser = users[token];
+        updateUserMenuBtn();
+        loadUserProfile();
+        renderDashboard();
+        showDashboard();
+        return true;
+      }
+    }
+    return false;
+  } catch(e) {
+    console.error('登录失败', e);
+    return false;
+  }
+}
+
+function register(username, password) {
+  try {
+    const users = getUsers();
+    for (const token in users) {
+      if (users[token].username === username) {
+        return false;
+      }
+    }
+    const userId = generateUserId();
+    const token = 'token_' + Date.now();
+    users[token] = {
+      userId: userId,
+      username: username,
+      password: btoa(password),
+      createdAt: Date.now()
+    };
+    saveUsers(users);
+    localStorage.setItem('crabAI_token', token);
+    localStorage.setItem('crabAI_isLoggedIn', 'true');
+    currentUser = users[token];
+    updateUserMenuBtn();
+    initUserProfile();
+    renderDashboard();
+    showDashboard();
+    return true;
+  } catch(e) {
+    console.error('注册失败', e);
+    return false;
+  }
+}
+
+function logout() {
+  localStorage.removeItem('crabAI_token');
+  localStorage.removeItem('crabAI_isLoggedIn');
+  currentUser = null;
+  updateUserMenuBtn();
+  userMenu.classList.remove('show');
+  loadUserProfile();
+  dashboard.classList.remove('show');
+  chatContainer.style.display = 'flex';
+  inputArea.style.display = 'flex';
+  contextSidebar.classList.remove('show');
+}
+
+function updateUserMenuBtn() {
+  if (currentUser) {
+    userMenuBtn.textContent = currentUser.username.charAt(0).toUpperCase();
+  } else {
+    userMenuBtn.textContent = '?';
+  }
+}
+
+function getProfileKey() {
+  if (currentUser) {
+    return 'crabAI_profile_' + currentUser.userId;
+  }
+  return 'crabAI_dims';
+}
+
+function initUserProfile() {
+  const profileKey = getProfileKey();
+  if (!localStorage.getItem(profileKey)) {
+    localStorage.setItem(profileKey, JSON.stringify({emotion:[], study:[], career:[], life:[]}));
+  }
+}
+
+function loadUserProfile() {
+  const profileKey = getProfileKey();
+  const savedFacts = localStorage.getItem(profileKey);
+  if (savedFacts) {
+    try {
+      facts = JSON.parse(savedFacts);
+    } catch(e) {
+      facts = {emotion:[], study:[], career:[], life:[]};
+    }
+  } else {
+    facts = {emotion:[], study:[], career:[], life:[]};
+  }
+  renderFacts();
+}
+
+function saveUserProfile() {
+  const profileKey = getProfileKey();
+  localStorage.setItem(profileKey, JSON.stringify(facts));
+}
+
+// ========== 仪表盘渲染 ==========
+function getGreeting() {
+  const hour = new Date().getHours();
+  let greeting = '';
+  if (hour < 6) greeting = '夜深了';
+  else if (hour < 9) greeting = '早安';
+  else if (hour < 12) greeting = '上午好';
+  else if (hour < 14) greeting = '中午好';
+  else if (hour < 18) greeting = '下午好';
+  else greeting = '晚上好';
+  
+  const nickname = currentUser ? currentUser.username : '朋友';
+  return greeting + '，' + nickname;
+}
+
+function getDateText() {
+  const now = new Date();
+  const month = now.getMonth() + 1;
+  const day = now.getDate();
+  const weekDays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+  const weekDay = weekDays[now.getDay()];
+  
+  let focusText = '';
+  const recentFacts = facts.study.concat(facts.career).slice(-3);
+  if (recentFacts.length > 0) {
+    focusText = ' · 近期关注：' + recentFacts[0].substring(0, 20) + '...';
+  }
+  
+  return '今天是 ' + month + '月' + day + '日 ' + weekDay + focusText;
+}
+
+function renderMoodChart() {
+  moodChart.innerHTML = '';
+  const days = ['一', '二', '三', '四', '五', '六', '日'];
+  const moods = [];
+  
+  for (let i = 6; i >= 0; i--) {
+    const date = new Date();
+    date.setDate(date.getDate() - i);
+    const dateStr = date.toISOString().split('T')[0];
+    const mood = localStorage.getItem('crabAI_mood_' + dateStr);
+    moods.push(mood ? parseFloat(mood) : Math.random() * 0.5 + 0.3);
+  }
+  
+  moods.forEach(function(mood, index) {
+    const bar = document.createElement('div');
+    bar.className = 'mood-bar';
+    const height = mood * 100;
+    bar.style.height = height + '%';
+    if (height < 40) bar.classList.add('low');
+    else if (height < 70) bar.classList.add('medium');
+    else bar.classList.add('high');
+    moodChart.appendChild(bar);
+    
+    const label = document.createElement('div');
+    label.style.fontSize = '10px';
+    label.style.color = '#8b949e';
+    label.style.textAlign = 'center';
+    label.textContent = days[index];
+    bar.appendChild(label);
+  });
+}
+
+function renderTodos() {
+  todoList.innerHTML = '';
+  const todos = [];
+  
+  facts.study.forEach(function(f) {
+    if (f.includes('计划') || f.includes('任务') || f.includes('需要')) {
+      todos.push({text: f, type: 'study'});
+    }
+  });
+  facts.career.forEach(function(f) {
+    if (f.includes('计划') || f.includes('任务') || f.includes('需要')) {
+      todos.push({text: f, type: 'career'});
+    }
+  });
+  
+  const displayTodos = todos.slice(0, 5);
+  if (displayTodos.length === 0) {
+    const li = document.createElement('li');
+    li.className = 'todo-item';
+    li.textContent = '暂无待关注事项';
+    todoList.appendChild(li);
+  } else {
+    displayTodos.forEach(function(todo) {
+      const li = document.createElement('li');
+      li.className = 'todo-item';
+      li.textContent = todo.text;
+      todoList.appendChild(li);
+    });
+  }
+}
+
+function renderAchievements() {
+  achievementList.innerHTML = '';
+  const achievements = [];
+  
+  facts.study.forEach(function(f) {
+    if (f.includes('进步') || f.includes('完成') || f.includes('通过')) {
+      achievements.push({text: f, icon: '✓'});
+    }
+  });
+  facts.career.forEach(function(f) {
+    if (f.includes('完成') || f.includes('成功') || f.includes('达成')) {
+      achievements.push({text: f, icon: '✓'});
+    }
+  });
+  facts.emotion.forEach(function(f) {
+    if (f.includes('纪念日') || f.includes('生日')) {
+      achievements.push({text: f, icon: '★'});
+    }
+  });
+  
+  const displayAchievements = achievements.slice(-5);
+  if (displayAchievements.length === 0) {
+    const li = document.createElement('li');
+    li.className = 'achievement-item';
+    li.innerHTML = '<span class="badge">*</span>暂无成就记录';
+    achievementList.appendChild(li);
+  } else {
+    displayAchievements.forEach(function(achievement) {
+      const li = document.createElement('li');
+      li.className = 'achievement-item';
+      li.innerHTML = '<span class="badge">' + achievement.icon + '</span>' + achievement.text;
+      achievementList.appendChild(li);
+    });
+  }
+}
+
+function renderDashboard() {
+  greetingText.textContent = getGreeting();
+  dateText.textContent = getDateText();
+  renderMoodChart();
+  renderTodos();
+  renderAchievements();
+}
+
+function showDashboard() {
+  isChatMode = false;
+  dashboard.classList.add('show');
+  chatContainer.classList.remove('show');
+  chatContainer.style.display = 'none';
+  inputArea.style.display = 'none';
+  contextSidebar.classList.remove('show');
+}
+
+function showChat() {
+  isChatMode = true;
+  dashboard.classList.remove('show');
+  chatContainer.style.display = 'flex';
+  inputArea.style.display = 'flex';
+  renderMessages();
+  scrollToBottom();
+}
+
+function renderContextSidebar(topic) {
+  contextSidebar.innerHTML = '';
+  
+  const contextCard = document.createElement('div');
+  contextCard.className = 'context-card';
+  
+  const h4 = document.createElement('h4');
+  h4.textContent = '当前话题';
+  contextCard.appendChild(h4);
+  
+  const p = document.createElement('p');
+  p.textContent = topic || '对话中...';
+  contextCard.appendChild(p);
+  
+  const tagsDiv = document.createElement('div');
+  tagsDiv.className = 'context-tags';
+  
+  Object.keys(DIMENSIONS).forEach(function(key) {
+    if (facts[key].length > 0) {
+      const tag = document.createElement('span');
+      tag.className = 'context-tag';
+      tag.textContent = DIMENSIONS[key];
+      tagsDiv.appendChild(tag);
+    }
+  });
+  contextCard.appendChild(tagsDiv);
+  contextSidebar.appendChild(contextCard);
+  
+  contextSidebar.classList.add('show');
+}
+
+function showMemoryPopup(relatedFacts) {
+  memoryList.innerHTML = '';
+  if (relatedFacts.length === 0) {
+    const li = document.createElement('li');
+    li.textContent = '暂无相关记忆';
+    memoryList.appendChild(li);
+  } else {
+    relatedFacts.forEach(function(fact) {
+      const li = document.createElement('li');
+      li.textContent = fact;
+      memoryList.appendChild(li);
+    });
+  }
+  memoryPopup.classList.add('show');
+}
+
+function hideMemoryPopup() {
+  memoryPopup.classList.remove('show');
+}
+
+function findRelatedFacts(text) {
+  const related = [];
+  const textLower = text.toLowerCase();
+  
+  Object.keys(facts).forEach(function(key) {
+    facts[key].forEach(function(fact) {
+      if (fact.toLowerCase().includes(textLower) && related.length < 5) {
+        related.push(fact);
+      }
+    });
+  });
+  
+  return related;
 }
 
 // ========== 检查 API Key ==========
@@ -167,23 +661,25 @@ function saveMessages() {
 }
 
 function saveFacts() {
-  localStorage.setItem('crabAI_dims', JSON.stringify(facts));
+  saveUserProfile();
 }
 
 // ========== 初始化 ==========
 function init() {
   checkApiKey();
+  currentUser = getCurrentUser();
+  updateUserMenuBtn();
   migrateOldData();
-  const savedFacts = localStorage.getItem('crabAI_dims');
-  if (savedFacts) {
-    try {
-      facts = JSON.parse(savedFacts);
-    } catch(e) {
-      facts = {emotion:[], study:[], career:[], life:[]};
-    }
+  loadUserProfile();
+  
+  if (currentUser) {
+    renderDashboard();
+    showDashboard();
+  } else {
+    chatContainer.style.display = 'flex';
+    inputArea.style.display = 'flex';
+    renderMessages();
   }
-  renderMessages();
-  renderFacts();
 }
 
 // ========== 渲染消息 ==========
@@ -246,7 +742,7 @@ async function sendMessage() {
   scrollToBottom();
 
   const factsText = JSON.stringify(facts);
-  let sysPrompt = '你是一位极度深度的多学科心理与逻辑分析师。' +
+  let sysPrompt = '你是蟹蟹，一位极度深度的多学科心理与逻辑分析师，也是用户的专属个人外脑。' +
     '【底层思维操作系统 - 每次回复必须调用】' +
     '1. 真实错误模拟器：直接进实战场景，出错后通过提问让自己发现错误，试错至少2次再揭露答案，重复到自信作答。' +
     '2. 困惑破解者：先给钥匙句用日常类比讲，别用术语，再问3个理解才能答对的问题，全对才继续。' +
@@ -263,6 +759,9 @@ async function sendMessage() {
     '给每个判断打标签：KNOWN训练事实、COMPUTED计算得出、INFERRED推论、COMMON通用知识、FRAME符号体系、GUESS没有根据。' +
     '置信度：HIGH80%以上、MED50-80%、LOW20-50%、VERY LOW20%以下、UNKNOWN无法判断。' +
     '不知道就写我不知道。反谄媚：不漂亮、不解释一切、不立刻同意、不制造权威感。事后解释标记为INFERRED,post-hoc。' +
+    '【开场白规则】' +
+    '如果这是第一次对话或长时间未对话，开场白必须引用用户档案中的具体内容，禁止使用通用问候语。' +
+    '例如：如果档案中有"正在学习英语"，要说"嘿！记得你在学习英语，今天有什么进展吗？"而不是"你好！"。' +
     '已知用户档案：' + factsText + '。' +
     '请严格按以下格式输出（绝对禁止用Markdown符号如#*_`）：' +
     '=== 区块一：深度叙事与分析 ===（共情、细腻、层层递进的深层心理剖析）' +
@@ -336,6 +835,14 @@ async function sendMessage() {
     messages.push({role:'assistant', content:fullText});
     saveMessages();
     extractFacts(text, fullText);
+    
+    renderContextSidebar(text);
+    
+    const relatedFacts = findRelatedFacts(text);
+    if (relatedFacts.length > 0) {
+      showMemoryPopup(relatedFacts);
+      setTimeout(hideMemoryPopup, 8000);
+    }
 
   } catch(err) {
     contentDiv.textContent = '出错了: ' + err.message;
@@ -421,7 +928,8 @@ function renderFacts() {
 
 // ========== 导出档案 ==========
 function exportFacts() {
-  const data = localStorage.getItem('crabAI_dims');
+  const profileKey = getProfileKey();
+  const data = localStorage.getItem(profileKey);
   if (!data) {
     alert('暂无档案可导出');
     return;
@@ -453,8 +961,8 @@ importFile.addEventListener('change', function(e) {
       const json = JSON.parse(event.target.result);
       if (Array.isArray(json.emotion) && Array.isArray(json.study) && 
           Array.isArray(json.career) && Array.isArray(json.life)) {
-        localStorage.setItem('crabAI_dims', JSON.stringify(json));
         facts = json;
+        saveUserProfile();
         renderFacts();
         alert('档案导入成功');
       } else {
@@ -462,6 +970,39 @@ importFile.addEventListener('change', function(e) {
       }
     } catch(err) {
       alert('档案格式错误');
+    }
+  };
+  reader.onerror = function() {
+    alert('读取文件失败');
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
+// ========== 手机端个人档案导入 ==========
+function importProfile() {
+  importProfileFile.click();
+}
+
+importProfileFile.addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(event) {
+    try {
+      const json = JSON.parse(event.target.result);
+      if (Array.isArray(json.emotion) && Array.isArray(json.study) && 
+          Array.isArray(json.career) && Array.isArray(json.life)) {
+        facts = json;
+        saveUserProfile();
+        renderFacts();
+        alert('个人档案导入成功');
+      } else {
+        alert('档案格式错误，请确保包含 emotion、study、career、life 四个数组');
+      }
+    } catch(err) {
+      alert('JSON 格式错误，请检查文件内容');
     }
   };
   reader.onerror = function() {
@@ -549,9 +1090,101 @@ changeKeyBtn.addEventListener('click', function() {
   keyOverlay.style.display = 'flex';
 });
 
+importProfileBtn.addEventListener('click', importProfile);
+
+authSubmit.addEventListener('click', function() {
+  const username = authUsername.value.trim();
+  const password = authPassword.value.trim();
+  
+  if (!username || !password) {
+    authError.textContent = '请输入用户名和密码';
+    authError.style.display = 'block';
+    return;
+  }
+  
+  authError.style.display = 'none';
+  
+  if (isLoginMode) {
+    if (login(username, password)) {
+      authModal.classList.remove('show');
+      authUsername.value = '';
+      authPassword.value = '';
+    } else {
+      authError.textContent = '用户名或密码错误';
+      authError.style.display = 'block';
+    }
+  } else {
+    if (register(username, password)) {
+      authModal.classList.remove('show');
+      authUsername.value = '';
+      authPassword.value = '';
+    } else {
+      authError.textContent = '用户名已存在';
+      authError.style.display = 'block';
+    }
+  }
+});
+
+authToggle.addEventListener('click', function() {
+  isLoginMode = !isLoginMode;
+  if (isLoginMode) {
+    authTitle.textContent = '登录';
+    authSubmit.textContent = '登录';
+    authToggle.textContent = '还没有账号？点击注册';
+  } else {
+    authTitle.textContent = '注册';
+    authSubmit.textContent = '注册';
+    authToggle.textContent = '已有账号？点击登录';
+  }
+  authError.style.display = 'none';
+});
+
+userMenuBtn.addEventListener('click', function(e) {
+  e.stopPropagation();
+  if (currentUser) {
+    userMenu.classList.toggle('show');
+  } else {
+    authModal.classList.add('show');
+  }
+});
+
+document.addEventListener('click', function(e) {
+  if (!userMenu.contains(e.target) && !userMenuBtn.contains(e.target)) {
+    userMenu.classList.remove('show');
+  }
+});
+
+document.getElementById('menu-profile').addEventListener('click', function() {
+  userMenu.classList.remove('show');
+  factsPanel.style.display = 'block';
+  overlay.style.display = 'block';
+  factsPanel.scrollTop = 0;
+});
+
+document.getElementById('menu-settings').addEventListener('click', function() {
+  userMenu.classList.remove('show');
+  factsPanel.style.display = 'block';
+  overlay.style.display = 'block';
+  setTimeout(function() {
+    changeKeyBtn.scrollIntoView({behavior: 'smooth'});
+  }, 100);
+});
+
+document.getElementById('menu-logout').addEventListener('click', logout);
+
+startChatBtn.addEventListener('click', showChat);
+
+closeMemory.addEventListener('click', hideMemoryPopup);
+
 // ========== 启动 ==========
 init();
 setupVoice();
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/service-worker.js').catch(function(err) {
+    console.log('Service Worker 注册失败:', err);
+  });
+}
 </script>
 </body>
 </html>
