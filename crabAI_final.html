@@ -742,14 +742,22 @@ function checkApiKey() {
 
 // ========== 保存 API Key ==========
 function saveApiKey() {
-  const key = apiKeyInput.value.trim();
-  if (!key || !key.startsWith('sk-') || key.length < 20) {
-    keyError.style.display = 'block';
-    return;
+  try {
+    const key = apiKeyInput.value.trim();
+    if (!key || !key.startsWith('sk-') || key.length < 20) {
+      keyError.style.display = 'block';
+      console.log('API Key validation failed:', key ? 'invalid format' : 'empty');
+      return;
+    }
+    localStorage.setItem('crabAI_api_key', key);
+    console.log('API Key saved:', key.substring(0, 10) + '...');
+    keyError.style.display = 'none';
+    keyOverlay.style.display = 'none';
+    init();
+  } catch(e) {
+    console.error('API Key save failed:', e);
+    alert('保存失败，请检查浏览器权限');
   }
-  localStorage.setItem('crabAI_api_key', key);
-  keyError.style.display = 'none';
-  keyOverlay.style.display = 'none';
 }
 
 // ========== 数据存储 ==========
@@ -1405,8 +1413,8 @@ userMenuBtn.addEventListener('click', function(e) {
 });
 
 document.addEventListener('click', function(e) {
-  如果 (!userMenu.包含(e.target) && !userMenuBtn.包含(e.target)) {
-    userMenu.classList.移除('show');
+  if (!userMenu.contains(e.target) && !userMenuBtn.contains(e.target)) {
+    userMenu.classList.remove('show');
   }
 });
 
@@ -1436,9 +1444,9 @@ closeMemory.addEventListener('click', hideMemoryPopup);
 init();
 setupVoice();
 
-如果 ('serviceWorker'在导航器中){
-  导航器.服务工作线程.注册('/service-worker.js').捕获(函数(错误) {
-‘Service Worker 注册失败：’, 
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/service-worker.js').catch(function(err) {
+    console.log('Service Worker 注册失败:', err);
   });
 }
 </script>
