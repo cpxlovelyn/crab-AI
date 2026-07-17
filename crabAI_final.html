@@ -7,121 +7,123 @@
 <link rel="manifest" href="manifest.json">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#0d1117;color:#c9d1d9;height:100vh;display:flex;flex-direction:column}
-#header{padding:12px 16px;background:#161b22;border-bottom:1px solid #30363d;display:flex;justify-content:space-between;align-items:center}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#F5F5F5;color:#333333;height:100vh;display:flex;flex-direction:column}
+#header{padding:12px 16px;background:#FFFFFF;border-bottom:1px solid #E5E5E5;display:flex;justify-content:space-between;align-items:center}
 #header h1{font-size:18px;color:#007AFF}
 #header button:not(#user-menu-btn){background:#007AFF;color:white;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px}
 #chat-container{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
 .msg{max-width:85%;padding:10px 14px;border-radius:12px;line-height:1.6;font-size:14px}
-.msg.user{align-self:flex-end;background:#007AFF;color:white}
-.msg.ai{align-self:flex-start;background:#21262d;border:1px solid #30363d}
-.msg.ai .block-title{color:#007AFF;font-weight:bold;margin:8px 0 4px}
+.msg.user{align-self:flex-end;background:#E8F4FD;color:#333333;border:1px solid #D1E7F8}
+.msg.ai{align-self:flex-start;background:#FFFFFF;border:1px solid #E5E5E5;box-shadow:0 1px 2px rgba(0,0,0,0.05)}
+.msg.ai .block-title{color:#007AFF;font-weight:bold;margin:8px 0 4px;font-size:15px}
 .msg.ai .block-title:first-child{margin-top:0}
 #progress-bar{display:none;height:3px;background:#007AFF;border-radius:2px;margin-bottom:8px;transition:width 0.3s}
-#input-area{padding:12px 16px;background:#161b22;border-top:1px solid #30363d;display:flex;gap:8px;align-items:center}
-#chat-input{flex:1;background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:10px 14px;color:#c9d1d9;font-size:14px;outline:none}
-#chat-input::placeholder{color:#484f58}
+#input-area{padding:12px 16px;background:#FFFFFF;border-top:1px solid #E5E5E5;display:flex;gap:8px;align-items:center}
+#chat-input{flex:1;background:#FFFFFF;border:1px solid #E5E5E5;border-radius:8px;padding:10px 14px;color:#333333;font-size:14px;outline:none}
+#chat-input:focus{border-color:#007AFF}
+#chat-input::placeholder{color:#999999}
 #send-btn{background:#007AFF;color:white;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-size:14px}
-#send-btn:disabled{background:#484f58;cursor:not-allowed}
-#voice-btn{background:#21262d;color:#c9d1d9;border:1px solid #30363d;padding:10px 14px;border-radius:8px;cursor:pointer;font-size:14px}
+#send-btn:disabled{background:#CCCCCC;cursor:not-allowed}
+#voice-btn{background:#FAFAFA;color:#666666;border:1px solid #E5E5E5;padding:10px 14px;border-radius:8px;cursor:pointer;font-size:14px}
 #voice-btn.recording{background:#da3633;color:white}
-#facts-panel{display:none;position:fixed;top:0;right:0;width:320px;height:100vh;background:#161b22;border-left:1px solid #30363d;padding:16px;overflow-y:auto;z-index:100}
+#facts-panel{display:none;position:fixed;top:0;right:0;width:320px;height:100vh;background:#FFFFFF;border-left:1px solid #E5E5E5;padding:16px;overflow-y:auto;z-index:100;box-shadow:-2px 0 10px rgba(0,0,0,0.05)}
 #facts-panel h2{font-size:16px;margin-bottom:12px;color:#007AFF}
-.dim-card{background:#21262d;border:1px solid #30363d;border-radius:8px;padding:12px;margin-bottom:12px}
+.dim-card{background:#FAFAFA;border:1px solid #E5E5E5;border-radius:8px;padding:12px;margin-bottom:12px}
 .dim-card h3{color:#007AFF;font-size:14px;margin-bottom:8px}
 .dim-card .tags{display:flex;flex-wrap:wrap;gap:6px}
-.dim-card .tag{background:#0d1117;border:1px solid #30363d;border-radius:4px;padding:4px 8px;font-size:12px;color:#c9d1d9}
+.dim-card .tag{background:#FFFFFF;border:1px solid #E5E5E5;border-radius:4px;padding:4px 8px;font-size:12px;color:#333333}
 .close-btn{background:#007AFF;color:white;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px;margin-bottom:12px}
 #export-btn,#import-btn,#change-key-btn{background:#007AFF;color:white;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px;margin-right:8px;margin-bottom:8px}
-#overlay{display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.5);z-index:99}
-#key-overlay{position:fixed;top:0;left:0;width:100vw;height:100vh;background:#0d1117;z-index:1000;display:flex;flex-direction:column;justify-content:center;align-items:center}
+#overlay{display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.3);z-index:99}
+#key-overlay{position:fixed;top:0;left:0;width:100vw;height:100vh;background:#FFFFFF;z-index:1000;display:flex;flex-direction:column;justify-content:center;align-items:center}
 #key-overlay h2{color:#007AFF;margin-bottom:16px}
-#key-overlay p{color:#8b949e;margin-bottom:24px;font-size:14px;max-width:400px;text-align:center}
-#api-key-input{width:400px;padding:12px;background:#21262d;border:1px solid #30363d;border-radius:8px;color:#c9d1d9;margin-bottom:16px;font-size:14px}
+#key-overlay p{color:#666666;margin-bottom:24px;font-size:14px;max-width:400px;text-align:center}
+#api-key-input{width:400px;padding:12px;background:#FFFFFF;border:1px solid #E5E5E5;border-radius:8px;color:#333333;margin-bottom:16px;font-size:14px}
+#api-key-input:focus{border-color:#007AFF}
 #save-key-btn{background:#007AFF;color:white;border:none;padding:10px 24px;border-radius:8px;cursor:pointer;font-size:14px}
 #key-error{color:#da3633;margin-top:8px;font-size:12px;display:none}
 
-#auth-modal{display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.8);z-index:2000;justify-content:center;align-items:center}
+#auth-modal{display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.3);z-index:2000;justify-content:center;align-items:center}
 #auth-modal.show{display:flex}
-#auth-modal .modal-box{background:#161b22;border:1px solid #30363d;border-radius:12px;padding:24px;width:90%;max-width:360px}
+#auth-modal .modal-box{background:#FFFFFF;border:1px solid #E5E5E5;border-radius:12px;padding:24px;width:90%;max-width:360px;box-shadow:0 4px 20px rgba(0,0,0,0.1)}
 #auth-modal h2{color:#007AFF;margin-bottom:20px;font-size:18px;text-align:center}
-#auth-modal input{width:100%;background:#21262d;border:1px solid #30363d;border-radius:8px;padding:12px;color:#c9d1d9;font-size:14px;margin-bottom:12px;outline:none}
+#auth-modal input{width:100%;background:#FFFFFF;border:1px solid #E5E5E5;border-radius:8px;padding:12px;color:#333333;font-size:14px;margin-bottom:12px;outline:none}
 #auth-modal input:focus{border-color:#007AFF}
-#auth-modal input::placeholder{color:#484f58}
+#auth-modal input::placeholder{color:#999999}
 #auth-modal button{width:100%;background:#007AFF;color:white;border:none;padding:12px;border-radius:8px;cursor:pointer;font-size:14px;margin-bottom:12px}
 #auth-modal .toggle-link{color:#007AFF;font-size:12px;text-align:center;cursor:pointer}
 #auth-modal .error-msg{color:#da3633;font-size:12px;margin-bottom:12px;text-align:center;display:none}
 
 #user-menu-btn{width:36px;height:36px;border-radius:50%;background:#007AFF;color:white;border:none;cursor:pointer;font-size:16px;padding:0;display:flex;align-items:center;justify-content:center;font-weight:bold;margin-left:8px}
-#user-menu{display:none;position:absolute;top:56px;right:16px;background:#161b22;border:1px solid #30363d;border-radius:8px;padding:8px;min-width:160px;z-index:500}
+#user-menu{display:none;position:absolute;top:56px;right:16px;background:#FFFFFF;border:1px solid #E5E5E5;border-radius:8px;padding:8px;min-width:160px;z-index:500;box-shadow:0 4px 12px rgba(0,0,0,0.1)}
 #user-menu.show{display:block}
-#user-menu button{width:100%;background:none;color:#c9d1d9;border:none;padding:10px 12px;text-align:left;border-radius:6px;cursor:pointer;font-size:14px}
-#user-menu button:hover{background:#21262d}
-#user-menu .divider{height:1px;background:#30363d;margin:8px 0}
+#user-menu button{width:100%;background:none;color:#333333;border:none;padding:10px 12px;text-align:left;border-radius:6px;cursor:pointer;font-size:14px}
+#user-menu button:hover{background:#F5F5F5}
+#user-menu .divider{height:1px;background:#E5E5E5;margin:8px 0}
 
 #dashboard{display:none;flex:1;overflow-y:auto;padding:20px}
 #dashboard.show{display:block}
 .dashboard-greeting{text-align:center;margin-bottom:24px}
 .dashboard-greeting h2{font-size:24px;color:#007AFF;margin-bottom:8px}
-.dashboard-greeting p{font-size:14px;color:#8b949e}
+.dashboard-greeting p{font-size:14px;color:#666666}
 .dashboard-grid{display:grid;grid-template-columns:1fr;gap:16px;margin-bottom:24px}
 @media(min-width:768px){.dashboard-grid{grid-template-columns:repeat(3,1fr)}}
-.dashboard-card{background:#161b22;border:1px solid #30363d;border-radius:12px;padding:16px}
+.dashboard-card{background:#FFFFFF;border:1px solid #E5E5E5;border-radius:12px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,0.03)}
 .dashboard-card h3{font-size:14px;color:#007AFF;margin-bottom:12px;display:flex;align-items:center;gap:8px}
 .dashboard-card h3::before{content:'•';color:#007AFF}
 .mood-chart{height:120px;display:flex;align-items:flex-end;justify-content:space-between;padding:8px 0}
 .mood-bar{width:12%;background:#007AFF;border-radius:4px 4px 0 0;transition:height 0.3s}
-.mood-bar.low{background:#484f58}
+.mood-bar.low{background:#CCCCCC}
 .mood-bar.medium{background:#F59E0B}
 .mood-bar.high{background:#007AFF}
 .todo-list{list-style:none;padding:0}
-.todo-item{padding:8px 0;border-bottom:1px solid #30363d;font-size:13px;color:#c9d1d9}
+.todo-item{padding:8px 0;border-bottom:1px solid #E5E5E5;font-size:13px;color:#333333}
 .todo-item:last-child{border-bottom:none}
 .achievement-list{list-style:none;padding:0}
-.achievement-item{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #30363d;font-size:13px;color:#c9d1d9}
+.achievement-item{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #E5E5E5;font-size:13px;color:#333333}
 .achievement-item:last-child{border-bottom:none}
-.achievement-item .badge{width:24px;height:24px;border-radius:50%;background:#F59E0B;color:#0d1117;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold}
+.achievement-item .badge{width:24px;height:24px;border-radius:50%;background:#F59E0B;color:#FFFFFF;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold}
 #start-chat-btn{width:100%;background:#007AFF;color:white;border:none;padding:16px;border-radius:12px;cursor:pointer;font-size:16px;font-weight:bold;margin-top:auto}
 
-#context-sidebar{display:none;position:fixed;top:50px;right:0;width:280px;height:calc(100vh - 120px);background:#161b22;border-left:1px solid #30363d;padding:12px;overflow-y:auto;z-index:50}
+#context-sidebar{display:none;position:fixed;top:50px;right:0;width:280px;height:calc(100vh - 120px);background:#FFFFFF;border-left:1px solid #E5E5E5;padding:12px;overflow-y:auto;z-index:50;box-shadow:-2px 0 8px rgba(0,0,0,0.05)}
 #context-sidebar.show{display:block}
-.context-card{background:#21262d;border-radius:8px;padding:12px;margin-bottom:12px}
+.context-card{background:#FAFAFA;border-radius:8px;padding:12px;margin-bottom:12px}
 .context-card h4{font-size:12px;color:#007AFF;margin-bottom:8px}
-.context-card p{font-size:12px;color:#c9d1d9;margin-bottom:4px}
+.context-card p{font-size:12px;color:#333333;margin-bottom:4px}
 .context-tags{display:flex;flex-wrap:wrap;gap:4px}
-.context-tag{background:#0d1117;border:1px solid #30363d;border-radius:4px;padding:2px 6px;font-size:11px;color:#8b949e}
+.context-tag{background:#FFFFFF;border:1px solid #E5E5E5;border-radius:4px;padding:2px 6px;font-size:11px;color:#666666}
 
-#memory-popup{display:none;position:fixed;top:50%;right:20px;transform:translateY(-50%);background:#161b22;border:1px solid #007AFF;border-radius:8px;padding:12px;min-width:250px;max-width:300px;z-index:200}
+#memory-popup{display:none;position:fixed;top:50%;right:20px;transform:translateY(-50%);background:#FFFFFF;border:1px solid #007AFF;border-radius:8px;padding:12px;min-width:250px;max-width:300px;z-index:200;box-shadow:0 2px 12px rgba(0,0,0,0.1)}
 #memory-popup.show{display:block}
 #memory-popup h4{font-size:12px;color:#007AFF;margin-bottom:8px}
 #memory-popup ul{list-style:none;padding:0;margin:0}
-#memory-popup li{font-size:12px;color:#c9d1d9;padding:4px 0;border-bottom:1px solid #30363d}
+#memory-popup li{font-size:12px;color:#333333;padding:4px 0;border-bottom:1px solid #E5E5E5}
 #memory-popup li:last-child{border-bottom:none}
-#memory-popup .close-memory{position:absolute;top:4px;right:8px;color:#8b949e;cursor:pointer;font-size:14px}
+#memory-popup .close-memory{position:absolute;top:4px;right:8px;color:#999999;cursor:pointer;font-size:14px}
 
-#confirm-modal,#add-modal{display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.7);z-index:3000;justify-content:center;align-items:center}
+#confirm-modal,#add-modal{display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.3);z-index:3000;justify-content:center;align-items:center}
 #confirm-modal.show,#add-modal.show{display:flex}
-#confirm-modal .modal-content,#add-modal .modal-content{background:#161b22;border:1px solid #30363d;border-radius:12px;padding:24px;width:90%;max-width:320px}
+#confirm-modal .modal-content,#add-modal .modal-content{background:#FFFFFF;border:1px solid #E5E5E5;border-radius:12px;padding:24px;width:90%;max-width:320px;box-shadow:0 4px 20px rgba(0,0,0,0.1)}
 #confirm-modal h3,#add-modal h3{color:#007AFF;margin-bottom:12px;font-size:16px;text-align:center}
-#confirm-modal p{color:#c9d1d9;margin-bottom:20px;font-size:14px;text-align:center}
-#add-modal input{width:100%;background:#0d1117;border:1px solid #007AFF;border-radius:8px;padding:12px;color:#c9d1d9;font-size:14px;margin-bottom:16px;outline:none}
-#add-modal input::placeholder{color:#484f58}
+#confirm-modal p{color:#333333;margin-bottom:20px;font-size:14px;text-align:center}
+#add-modal input{width:100%;background:#FFFFFF;border:1px solid #007AFF;border-radius:8px;padding:12px;color:#333333;font-size:14px;margin-bottom:16px;outline:none}
+#add-modal input::placeholder{color:#999999}
 .confirm-buttons{display:flex;gap:12px;justify-content:center}
 .btn-ok{background:#007AFF;color:white;border:none;padding:10px 24px;border-radius:8px;cursor:pointer;font-size:14px}
-.btn-cancel{background:#30363d;color:#c9d1d9;border:none;padding:10px 24px;border-radius:8px;cursor:pointer;font-size:14px}
+.btn-cancel{background:#F5F5F5;color:#666666;border:1px solid #E5E5E5;padding:10px 24px;border-radius:8px;cursor:pointer;font-size:14px}
 
-.fact-item{position:relative;background:#0d1117;border:1px solid #30363d;border-radius:4px;padding:4px 24px 4px 8px;font-size:12px;color:#c9d1d9;margin-bottom:6px}
-.fact-item .edit-btn{position:absolute;top:2px;right:2px;width:18px;height:18px;background:none;border:none;color:#8b949e;cursor:pointer;font-size:12px;padding:0;display:flex;align-items:center;justify-content:center}
+.fact-item{position:relative;background:#FFFFFF;border:1px solid #E5E5E5;border-radius:4px;padding:4px 24px 4px 8px;font-size:12px;color:#333333;margin-bottom:6px}
+.fact-item .edit-btn{position:absolute;top:2px;right:2px;width:18px;height:18px;background:none;border:none;color:#999999;cursor:pointer;font-size:12px;padding:0;display:flex;align-items:center;justify-content:center}
 .fact-item .edit-btn:hover{color:#007AFF}
-.fact-edit-box{background:#0d1117;border:1px solid #007AFF;border-radius:4px;padding:4px 8px;margin-bottom:6px}
-.fact-edit-box textarea{width:100%;background:transparent;border:none;color:#c9d1d9;font-size:12px;resize:none;outline:none;font-family:inherit}
+.fact-edit-box{background:#FFFFFF;border:1px solid #007AFF;border-radius:4px;padding:4px 8px;margin-bottom:6px}
+.fact-edit-box textarea{width:100%;background:transparent;border:none;color:#333333;font-size:12px;resize:none;outline:none;font-family:inherit}
 .fact-edit-actions{display:flex;gap:6px;margin-top:4px}
 .fact-edit-actions .btn-save{background:#007AFF;color:white;border:none;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:12px}
-.fact-edit-actions .btn-cancel-edit{background:#30363d;color:#c9d1d9;border:none;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:12px}
+.fact-edit-actions .btn-cancel-edit{background:#F5F5F5;color:#666666;border:1px solid #E5E5E5;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:12px}
 .fact-edit-actions .btn-delete{background:#da3633;color:white;border:none;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:12px}
 
 .add-fact-btn{background:none;border:1px dashed #007AFF;color:#007AFF;padding:8px 12px;border-radius:4px;cursor:pointer;font-size:12px;margin-top:8px;width:100%;text-align:left}
-.add-fact-btn:hover{background:rgba(0,122,255,0.1)}
+.add-fact-btn:hover{background:rgba(0,122,255,0.05)}
 </style>
 </head>
 <body>
@@ -486,7 +488,7 @@ function renderMoodChart() {
     
     const text = document.createElement('p');
     text.textContent = '📖 暂无心情记录，开始第一次语音日记吧';
-    text.style.color = '#8b949e';
+    text.style.color = '#999999';
     text.style.fontSize = '13px';
     text.style.marginBottom = '12px';
     
@@ -524,7 +526,7 @@ function renderMoodChart() {
     
     const text = document.createElement('p');
     text.textContent = '📖 暂无心情记录，开始第一次语音日记吧';
-    text.style.color = '#8b949e';
+    text.style.color = '#999999';
     text.style.fontSize = '13px';
     text.style.marginBottom = '12px';
     
@@ -563,7 +565,7 @@ function renderMoodChart() {
     
     const label = document.createElement('div');
     label.style.fontSize = '10px';
-    label.style.color = '#8b949e';
+    label.style.color = '#999999';
     label.style.textAlign = 'center';
     label.textContent = item.dayLabel;
     bar.appendChild(label);
@@ -826,15 +828,32 @@ function renderMessages() {
   scrollToBottom();
 }
 
+function sanitizeMarkdown(text) {
+  let clean = text
+    .replace(/===.*?===/g, '')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<strong>$1</strong>')
+    .replace(/###\s(.+)/g, '<strong>$1</strong>')
+    .replace(/##\s(.+)/g, '<strong>$1</strong>')
+    .replace(/#\s(.+)/g, '<strong>$1</strong>')
+    .replace(/`(.+?)`/g, '<code>$1</code>')
+    .replace(/---/g, '')
+    .replace(/KNOWN|COMPUTED|INFERRED|COMMON|FRAME|GUESS/g, '')
+    .replace(/HIGH|MED|LOW|VERY LOW|UNKNOWN/g, '')
+    .replace(/判断标签|钥匙句/g, '')
+    .replace(/区块一|区块二/g, '')
+    .replace(/核心逻辑演|深度叙事与分析/g, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .replace(/^\s+|\s+$/g, '')
+    .replace(/\n/g, '<br>');
+  return clean;
+}
+
 function addMessageToDOM(role, content) {
   const div = document.createElement('div');
   div.className = 'msg ' + role;
   if (role === 'ai') {
-    let html = content
-      .replace(/=== 区块一：深度叙事与分析 ===/g, '<div class="block-title">深度叙事与分析</div>')
-      .replace(/=== 区块二：核心逻辑推演 ===/g, '<div class="block-title">核心逻辑推演</div>')
-      .replace(/\n/g, '<br>');
-    div.innerHTML = html;
+    div.innerHTML = sanitizeMarkdown(content);
   } else {
     div.textContent = content;
   }
@@ -877,30 +896,19 @@ async function sendMessage() {
   scrollToBottom();
 
   const factsText = JSON.stringify(facts);
-  let sysPrompt = '你是蟹蟹，一位极度深度的多学科心理与逻辑分析师，也是用户的专属个人外脑。' +
-    '【底层思维操作系统 - 每次回复必须调用】' +
-    '1. 真实错误模拟器：直接进实战场景，出错后通过提问让自己发现错误，试错至少2次再揭露答案，重复到自信作答。' +
-    '2. 困惑破解者：先给钥匙句用日常类比讲，别用术语，再问3个理解才能答对的问题，全对才继续。' +
-    '3. 定制学习路径：明确目标、技能、期限、成果和已有基础，要7天计划，每天45分钟任务、完成标准和避坑点，达不成目标就改。' +
-    '4. 隐藏漏洞检测器：觉得掌握技能后，被问5个戳穿浅尝辄止的问题，每个答案指出知识盲点，只懂皮毛就直说。' +
-    '5. 严苛进度镜像：监督长期进步，对比每次回复，说明是真进步还是重复错误，停滞就直言，只表扬真实可测进步。' +
-    '6. 最坏情景教练：学技能时模拟高压无教材场景，直接进入后指出失败点和需训练的地方。' +
-    '7. 思维捷径检查员：解决问题后审查思考过程，用捷径、死记硬背或碰运气就重来，要能说出每步为什么才算掌握。' +
-    '8. 反向教学模拟器：假装学生被教技能，问简单问题，每用术语就要例子，讲错时顺着错逻辑推导到荒谬结论，直到解释自洽。' +
-    '【领域专家模式】' +
-    '输出领域专家认同的5个核心思维模式、专家争论最凶的3个方面及论据、出10道能区分理解与死记硬背的题，死磕题目改进。' +
-    '【顶级专家指令】' +
-    '准确胜过讨好，直接敢于争辩，先讲反方观点，没有新证据不轻易让步。' +
-    '给每个判断打标签：KNOWN训练事实、COMPUTED计算得出、INFERRED推论、COMMON通用知识、FRAME符号体系、GUESS没有根据。' +
-    '置信度：HIGH80%以上、MED50-80%、LOW20-50%、VERY LOW20%以下、UNKNOWN无法判断。' +
-    '不知道就写我不知道。反谄媚：不漂亮、不解释一切、不立刻同意、不制造权威感。事后解释标记为INFERRED,post-hoc。' +
+  let sysPrompt = '你是蟹蟹，用户的专属个人外脑。请用自然、流畅、温暖的语言回答用户的问题。' +
+    '【输出格式要求】' +
+    '1. 绝对禁止输出任何Markdown标记符号，包括但不限于：#、##、###、**、*、_、`、===、---等。' +
+    '2. 禁止输出内部推理标记，如"区块一"、"区块二"、"判断标签"、"钥匙句"等。' +
+    '3. 禁止输出置信度标签，如"KNOWN"、"COMPUTED"、"INFERRED"、"HIGH"、"MED"等。' +
+    '4. 使用纯文本格式，段落之间空一行。' +
+    '5. 每段控制在3-5行，避免过长的段落。' +
+    '6. 使用序号（1. 2. 3.）或项目符号（•）进行分点说明，层次清晰。' +
+    '7. 关键结论、核心观点使用加粗，只加粗关键词，不要整段加粗。' +
     '【开场白规则】' +
     '如果这是第一次对话或长时间未对话，开场白必须引用用户档案中的具体内容，禁止使用通用问候语。' +
     '例如：如果档案中有"正在学习英语"，要说"嘿！记得你在学习英语，今天有什么进展吗？"而不是"你好！"。' +
-    '已知用户档案：' + factsText + '。' +
-    '请严格按以下格式输出（绝对禁止用Markdown符号如#*_`）：' +
-    '=== 区块一：深度叙事与分析 ===（共情、细腻、层层递进的深层心理剖析）' +
-    '=== 区块二：核心逻辑推演 ===（极度理性的因果推导、行为预测、理论验证）';
+    '已知用户档案：' + factsText + '。';
 
   const requestMsgs = [{role:'system', content:sysPrompt}];
   messages.forEach(function(m) { requestMsgs.push(m); });
@@ -948,12 +956,7 @@ async function sendMessage() {
             fullText += delta;
             progress = Math.min(progress + 2, 95);
             progressBar.style.width = progress + '%';
-
-            let html = fullText
-              .replace(/=== 区块一：深度叙事与分析 ===/g, '<div class="block-title">深度叙事与分析</div>')
-              .replace(/=== 区块二：核心逻辑推演 ===/g, '<div class="block-title">核心逻辑推演</div>')
-              .replace(/\n/g, '<br>');
-            contentDiv.innerHTML = html;
+            contentDiv.innerHTML = sanitizeMarkdown(fullText);
             scrollToBottom();
           }
         } catch(e) {
